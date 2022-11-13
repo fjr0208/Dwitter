@@ -5,7 +5,7 @@ import * as authRepository from '../data/auth.js';
 
 const jwtSecretKey = '123';
 const jwtExpiresInDays = '2d';
-const bcryptSaltRounds = '10';
+const bcryptSaltRounds = 10;
 
 
 export async function signup(req, res) {
@@ -31,7 +31,7 @@ export async function signup(req, res) {
     });
     //성공적으로 추가하면 res.status(201)
 
-    const token = createJwtToken(userId);
+    const token = await createJwtToken(userId);
 
     res.status(201).json(token, username);
 
@@ -51,15 +51,15 @@ export async function login(req, res) {
     }
     // 암호 비교할때는 bcrypt로 실행
 
-    // const comparePassword = await bcrypt.compare(password, user.password);
+    const comparePassword = await bcrypt.compare(password, user.password);
 
-    // if (!comparePassword) {
-    //     return res.status(401).json({ message: '비밀번호가 틀립니다' });
-    // }
-    const findedPassword = await authRepository.findPassword(username, password);
-    if (findedPassword) {
-        return res.status(401).json(findedPassword);
+    if (!comparePassword) {
+        return res.status(401).json({ message: '비밀번호가 틀립니다' });
     }
+    // const comparePassword = await authRepository.comparePassword(username, password);
+    // if (comparePassword) {
+    //     return res.status(401).json(comparePassword);
+    // }
 
     // 모두 같으면 jwt 토큰 발행
     const token = createJwtToken(user.id);
