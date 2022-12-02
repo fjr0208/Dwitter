@@ -20,6 +20,10 @@ export async function createUser(signUser) {
     return created.id;
 }
 
+export async function findById(id) {
+    return users.find((user) => user.id === id);
+}
+
 
 
 // export async function comparePassword(username, password) {

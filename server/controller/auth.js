@@ -2,10 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { } from 'express-async-errors';
 import * as authRepository from '../data/auth.js';
-
-const jwtSecretKey = '123';
-const jwtExpiresInDays = '2d';
-const bcryptSaltRounds = 10;
+import { config } from '../config.js';
 
 
 export async function signup(req, res) {
@@ -21,7 +18,7 @@ export async function signup(req, res) {
     }
 
     //암호를 bcrypt로 안전하게 바꾸기
-    const hashed = await bcrypt.hash(password, bcryptSaltRounds);
+    const hashed = await bcrypt.hash(password, config.bcrypt.saltRounds);
     const userId = await authRepository.createUser({
         username,
         password: hashed,
@@ -33,7 +30,7 @@ export async function signup(req, res) {
 
     const token = await createJwtToken(userId);
 
-    res.status(201).json(token, username);
+    res.status(201).json({ token, username });
 
 
 }
@@ -66,11 +63,14 @@ export async function login(req, res) {
     res.status(200).json({ token, username });
 }
 
-export async function me() {
-    // ???? 아직 감이 안옴 좀 더 고민해봐야될듯
-
+export async function me(req, res, next) {
+    const user = await authRepository.findById(req.userId);
+    if (!user) {
+        return res.status(404).json({ message: '사용자를 찾을수 없습니다' });
+    }
+    res.status(200).json({ token: req.token, username: user.username });
 }
 
 function createJwtToken(id) {
-    return jwt.sign({ id }, jwtSecretKey, { expiresIn: jwtExpiresInDays });
+    return jwt.sign({ id }, config.jwt.secretKey, { expiresIn: config.jwt.expiresInSec });
 }
